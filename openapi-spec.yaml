@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: Changelog
+  description: Adds and Gets changelog details
+  version: 1.0.0
+x-amazon-apigateway-request-validators:
+  Validate All:
+    validateRequestParameters: true
+    validateRequestBody: true
+x-amazon-apigateway-gateway-responses:
+  BAD_REQUEST_BODY:
+    statusCode: 400
+    responseTemplates:
+      application/json: '{ "message": "$context.error.validationErrorString" }'
+
+paths:
+  /details:
+    post:
+      summary: Add a new changelog detail
+      description: Webhook that adds a new changelog detail to the database
+      responses:
+        200:
+          $ref: '#/components/responses/Ok'
+        201:
+          $ref: '#/components/responses/Created'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetailModel'
+      security:
+        - api_key: []
+      x-amazon-apigateway-api-key-source: HEADER
+      x-amazon-apigateway-request-validator: Validate All
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${AddChangelogDetailRole.Arn}
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:dynamodb:action/PutItem
+        httpMethod: POST
+        type: aws
+        passthroughBehavior: 'never'
+        requestTemplates:
+          application/json:
+            Fn::Sub:
+              - |-
+                {
+                  "TableName": "${TableName}",
+                  "Item":{
+                    "pk": { "S": "changelog"},
+                    "sk": { "S": "$context.requestTimeEpoch$context.requestId"},
+                    "data": {
+                      "M": {
+                        "date": {"S": "$context.requestTime"},
+                        "key": { "S": "$input.path('$.key')"},
+                        "type": { "S": "$input.path('$.type')"},
+                        "description": { "S": "$input.path('$.description')"}
+                      }
+                    }
+                  }
+                }
+              - { TableName: { Ref: TableName } }
+        responses:
+          200:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($context.responseOverride.header.Access-Control-Allow-Origin = '*')
+                {
+                  "id": "$context.requestId"
+                }
+    get:
+      summary: Get changelog details
+      description: Returns a list of changelog details
+      responses:
+        200:
+          $ref: '#/components/responses/Ok'
+      x-amazon-apigateway-request-validator: Validate body, query string parameters, and headers
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::Sub: ${GetChangelogDetailsRole.Arn}
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:dynamodb:action/Query
+        httpMethod: POST
+        type: aws
+        passthroughBehavior: "never"
+        requestTemplates:
+          application/json:
+            Fn::Sub:
+              - |-
+                #set($exclusiveStartKey = $input.params().get('querystring').get('exclusiveStartKey'))
+                #set($responseLimit = $input.params().get('querystring').get('responseLimit'))
+                #if("$!responseLimit" == "")
+                  #set($responseLimit = 200)
+                #end
+                {
+                  "TableName": "${TableName}",
+                  "KeyConditionExpression": "#pk = :changelog",
+                  "ExpressionAttributeNames": {
+                    "#pk": "pk"
+                  },
+                  "ExpressionAttributeValues": {
+                    ":changelog": { "S": "changelog" }
+                  },
+                  #if("$!responseLimit" != "")
+                    "Limit": $responseLimit,
+                  #end
+                  "ScanIndexForward": false
+                  #if("$!exclusiveStartKey" != "")
+                    ,"ExclusiveStartKey": $util.urlDecode($exclusiveStartKey)
+                  #end
+                }
+              - { TableName: { Ref: TableName } }
+        responses:
+          200:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($context.responseOverride.header.Access-Control-Allow-Origin = '*')
+                #set($inputRoot = $input.path('$'))
+                {
+                  "Items": [
+                    #foreach($elem in $inputRoot.Items) {
+                      "date": "$elem.data.M.date.S",
+                      "type": "$elem.data.M.type.S",
+                      "description": "$elem.data.M.description.S"
+                    }#if($foreach.hasNext),#end
+                    #end
+                  ]
+                  #if("$!inputRoot.LastEvaluatedKey" != "")
+                    ,"lastEvaluatedKey": "$util.urlEncode($input.json('$.LastEvaluatedKey'))"
+                  #end
+                }
+
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header
+  schemas:
+    DetailModel:
+      type: object
+      required:
+        - key
+        - type
+        - description
+      properties:
+        key:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+
+  responses:
+    Ok: #200
+      description: The request was successful
+    Created: #201
+      description: The request succeeded and created a new changelog detail
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+            required:
+              - id
+
+    InternalServerError: #500
+      description: The server encountered an unexpected condition which prevented it from fulfilling the request.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: An error occurred saving the item.
+            required:
+              - message
