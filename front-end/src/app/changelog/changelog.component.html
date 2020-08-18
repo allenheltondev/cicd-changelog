@@ -1,0 +1,18 @@
+<div>
+  <div class="changelog-title">
+    Changelog
+  </div>
+  <ul *ngFor="let date of sortedChanges">
+    <li class="date-title">{{ date.date }}</li>
+    <ul>
+      <li *ngFor="let change of date.changes">
+        <div class="change-item">
+          <mat-icon class="changelog-icon" color="secondary">{{ change.icon }}</mat-icon>
+          <div>
+            {{ change.description }}
+          </div>
+        </div>
+      </li>
+    </ul>
+  </ul>
+</div>

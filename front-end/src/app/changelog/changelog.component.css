@@ -1,0 +1,27 @@
+
+.changelog-title {
+  background-color: white;
+  font-size: 1.5em;
+  padding: .5em;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.date-title {
+  font-size: 1.3em;
+  font-weight: 400;
+  margin-bottom: .5em;
+}
+
+.changelog-icon {
+  margin-right: .5em;
+}
+
+ul {
+  list-style-type: none;
+}
+
+.change-item {
+  display: flex;
+  align-items: center;
+}

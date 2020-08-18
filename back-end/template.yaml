@@ -11,7 +11,7 @@ Parameters:
     Default: changelog
   S3BucketName:
     Type: String
-    Default: cicd-changelog-artifacts
+    Default: REPLACEME
 
 Globals:
   Api:
@@ -114,3 +114,7 @@ Resources:
       KeyId: !Ref ApiKey
       KeyType: API_KEY
       UsagePlanId: !Ref UsagePlan
+
+Outputs:
+  APIEndpoint:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/dev"

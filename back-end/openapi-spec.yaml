@@ -47,14 +47,15 @@ paths:
           application/json:
             Fn::Sub:
               - |-
+                #set($epochDate = $context.requestTimeEpoch / 1000 )
                 {
                   "TableName": "${TableName}",
                   "Item":{
                     "pk": { "S": "changelog"},
-                    "sk": { "S": "$context.requestTimeEpoch$context.requestId"},
+                    "sk": { "S": "$context.requestTimeEpoch#$context.requestId"},
                     "data": {
                       "M": {
-                        "date": {"S": "$context.requestTime"},
+                        "date": {"S": "$epochDate"},
                         "key": { "S": "$input.path('$.key')"},
                         "type": { "S": "$input.path('$.type')"},
                         "description": { "S": "$input.path('$.description')"}
