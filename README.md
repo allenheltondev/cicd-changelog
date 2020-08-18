@@ -13,6 +13,12 @@ The CloudFormation template located in the **back-end** folder will deploy the f
 ## Architecture Diagram ##
 ![AWS Architecture Diagram](https://readysetcloud.s3.amazonaws.com/changelog-architecture-diagram.png)
 
+### Business Event Flow ###
+1. Dev team moves Jira issue to **Done** status. Jira publishes a webhook containing details about the closed issue.
+2. **AWS API Gateway** proxies directly to **DynamoDB** to store the details.
+3. End user loads the changelog page. The page makes a request to load recent changelog details.
+4. **AWS API Gateway** proxies directly to **DynamoDB** to load the details from the database and return them in the response.
+
 ## Prerequisites ##
 In order to properly run and deploy this app, you must perform the following
 1. [Setup an AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/)
