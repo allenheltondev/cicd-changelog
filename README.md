@@ -41,6 +41,7 @@ In order to properly run and deploy this app, you must perform the following
 8. Navigate to **./front-ent/environments/environment.ts**
 9. Replace the **Replace_Me_With_APIEndpoint_Output** text with the value you copied in step 7
 10. You are all set! The backend is deployed in AWS, and you can run the frontend locally.
+11. To start the frontend locally, type `cd front-end` to get in the correct directory, `ng build` to compile, and `ng serve` to start the local server
 
 ## Endpoints ##
 The backend will create two endpoints for your API:
@@ -57,7 +58,7 @@ The backend will create two endpoints for your API:
 * GET - /details - *Retrieves all changelog details from the system. Defaults to 200 results. If you want to see more/less, you can add a `responseLimit` query string parameter*
 
 ## Walkthrough ##
-For a detailed walkthough on how to configure this in JIRA, please visit [the article on my blog](https://readysetcloud.io).
+For a detailed walkthough on how to configure this in JIRA, please visit [the article on my blog](https://www.readysetcloud.io/blog/allen.helton/continuous-delivery-try-continuous-changelog/).
 
 
 [1.1]: http://i.imgur.com/tXSoThF.png
